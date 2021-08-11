@@ -5,6 +5,7 @@ import com.google.ortools.linearsolver.MPSolver;
 import com.google.ortools.linearsolver.MPVariable;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -39,11 +40,9 @@ public class BCA {
     }
 
     void solve() {
-        start = System.currentTimeMillis();
-
         // define solver
         mpSolver = MPSolver.createSolver("SCIP");
-//        mpSolver.setTimeLimit(12 * 1000);
+        mpSolver.setTimeLimit(15 * 1000);
 
         // define variables
         X = new MPVariable[n][m];
@@ -98,27 +97,32 @@ public class BCA {
         }
         objective.setMaximization();
 
+        start = System.currentTimeMillis();
+
         final MPSolver.ResultStatus resultStatus = mpSolver.solve();
 
+        System.out.printf("Runtime = %d (ms)\n", System.currentTimeMillis() - start);
+
         if (resultStatus == MPSolver.ResultStatus.OPTIMAL) {
-//            // create/open file
-//            File output = new File(filename.split("\\.")[0] + "-out.txt");
-//            FileWriter writer;
-//            try {
-//                boolean created = output.createNewFile();
-//                wr
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                System.exit(1);
-//            }
-            printSolution();
+            System.out.println("Optimal solution found");
         } else {
-            System.err.println("The problem does not have optimal solution");
-            printSolution();
+            System.err.println("Optimal solution not found");
         }
+        printSolution();
     }
 
     void printSolution() {
+        // create/open file
+        File output = new File("output/" + filename.split("\\.")[0] + "-out.txt");
+        FileWriter writer = null;
+        StringBuilder fileContent = new StringBuilder();
+        try {
+            boolean created = output.createNewFile();
+            writer = new FileWriter(output, false);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
         for (int i = 0; i < n; i++) {
             int lecturer = -1;
             for (int j = 0; j < m; j++) {
@@ -130,9 +134,18 @@ public class BCA {
                     else System.err.println("Violation of Constraints");
                 }
             }
-            System.out.printf("%d %d\n", i, lecturer);
+            fileContent.append(i).append(" ").append(lecturer).append("\n");
         }
-        System.out.println((int) objective.value());
+        fileContent.append((int) objective.value()).append("\n");
+        System.out.println(fileContent);
+        try {
+            writer.write(fileContent.toString());
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         for (int j = 0; j < m; j++) {
             double total = 0;
             for (int i = 0; i < n; i++) {
@@ -140,7 +153,6 @@ public class BCA {
             }
             if (total > t[j]) System.err.printf("Teacher %d: Violation of Constraints\n", j);
         }
-        System.out.printf("Runtime = %d (ms)\n", System.currentTimeMillis() - start);
     }
 
     void readData() {

@@ -1,48 +1,23 @@
-import com.google.ortools.Loader;
 import com.google.ortools.linearsolver.MPConstraint;
 import com.google.ortools.linearsolver.MPObjective;
 import com.google.ortools.linearsolver.MPSolver;
 import com.google.ortools.linearsolver.MPVariable;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Scanner;
 
-public class BCA {
-
-    // data
-    int n;
-    int m;
-    double[] d;
-    double[] t;
-    ArrayList<Integer>[] D;
-    int[][] c;
+public class LinearSolver extends Solver {
 
     // mp
     MPSolver mpSolver;
     MPVariable[][] X;
-    MPObjective objective;
-
-    // runtime
-    long start;
-
-    // data filename
-    String filename = "500.txt";
-
-    public static void main(String[] args) {
-        Loader.loadNativeLibraries();
-        BCA bca = new BCA();
-        bca.readData();
-        bca.solve();
-    }
+    MPObjective y;
 
     void solve() {
+        start = System.currentTimeMillis();
         // define solver
         mpSolver = MPSolver.createSolver("SCIP");
-        mpSolver.setTimeLimit(15 * 1000);
+//        mpSolver.setTimeLimit(15 * 1000);
 
         // define variables
         X = new MPVariable[n][m];
@@ -70,13 +45,11 @@ public class BCA {
         }
         // constraint 3: Nếu 2 lớp học trùng TKB thì không thể do cùng một giảng viên giảng dạy
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (c[i][j] == 1) {
-                    for (int k = 0; k < m; k++) {
-                        MPConstraint constraint = mpSolver.makeConstraint(0, 1 + ((i == j) ? 1 : 0));
-                        constraint.setCoefficient(X[i][k], 1);
-                        constraint.setCoefficient(X[j][k], 1);
-                    }
+            for (int j = 0; j < n && j != i; j++) {
+                for (int k = 0; k < m; k++) {
+                    MPConstraint constraint = mpSolver.makeConstraint(0, 1);
+                    constraint.setCoefficient(X[i][k], c[i][j]);
+                    constraint.setCoefficient(X[j][k], c[i][j]);
                 }
             }
         }
@@ -89,40 +62,29 @@ public class BCA {
         }
 
         // define objective
-        objective = mpSolver.objective();
+        y = mpSolver.objective();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                objective.setCoefficient(X[i][j], 1);
+                y.setCoefficient(X[i][j], 1);
             }
         }
-        objective.setMaximization();
+        y.setMaximization();
 
-        start = System.currentTimeMillis();
 
         final MPSolver.ResultStatus resultStatus = mpSolver.solve();
-
-        System.out.printf("Runtime = %d (ms)\n", System.currentTimeMillis() - start);
-
         if (resultStatus == MPSolver.ResultStatus.OPTIMAL) {
             System.out.println("Optimal solution found");
         } else {
             System.err.println("Optimal solution not found");
         }
         printSolution();
+        System.out.printf("Runtime = %d (ms)\n", System.currentTimeMillis() - start);
     }
 
     void printSolution() {
         // create/open file
-        File output = new File("output/" + filename.split("\\.")[0] + "-out.txt");
-        FileWriter writer = null;
+        FileWriter writer = Solver.getWriter(filename);
         StringBuilder fileContent = new StringBuilder();
-        try {
-            boolean created = output.createNewFile();
-            writer = new FileWriter(output, false);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
         for (int i = 0; i < n; i++) {
             int lecturer = -1;
             for (int j = 0; j < m; j++) {
@@ -136,7 +98,7 @@ public class BCA {
             }
             fileContent.append(i).append(" ").append(lecturer).append("\n");
         }
-        fileContent.append((int) objective.value()).append("\n");
+        fileContent.append((int) y.value()).append("\n");
         System.out.println(fileContent);
         try {
             writer.write(fileContent.toString());
@@ -152,40 +114,6 @@ public class BCA {
                 if (X[i][j].solutionValue() == 1) total += d[i];
             }
             if (total > t[j]) System.err.printf("Teacher %d: Violation of Constraints\n", j);
-        }
-    }
-
-    void readData() {
-        Scanner scanner;
-        try {
-            scanner = new Scanner(new File(Objects.requireNonNull(getClass().getResource("/input/" + filename)).getFile()));
-            n = scanner.nextInt();
-            m = scanner.nextInt();
-            d = new double[n];
-            for (int i = 0; i < n; i++) {
-                d[i] = scanner.nextDouble();
-            }
-            t = new double[m];
-            for (int i = 0; i < m; i++) {
-                t[i] = scanner.nextDouble();
-            }
-            D = new ArrayList[n];
-            for (int i = 0; i < n; i++) {
-                D[i] = new ArrayList<>();
-                int k = scanner.nextInt();
-                for (int j = 0; j < k; j++) {
-                    D[i].add(scanner.nextInt());
-                }
-            }
-            c = new int[n][n];
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    c[i][j] = scanner.nextInt();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
         }
     }
 }

@@ -23,11 +23,9 @@ public abstract class Solver {
     public static void main(String[] args) {
         Loader.loadNativeLibraries();
         Solver solver;
-//        solver = new LinearSolver();
-//        solver = new Backtracking();
         solver = new Heuristic();
         solver.start = System.currentTimeMillis();
-        solver.readData("500.txt");
+        solver.readData("50_500_10_(1).txt");
         solver.solve();
         System.out.printf("Runtime: %d (ms)\n", System.currentTimeMillis() - solver.start);
     }

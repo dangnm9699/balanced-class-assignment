@@ -9,6 +9,9 @@ public class Heuristic extends Solver {
     int[] X_best;
     int res_best;
 
+    // param
+    double alpha = 0.25;
+
     // random
     Random random = new Random();
 
@@ -19,10 +22,9 @@ public class Heuristic extends Solver {
         res_best = 0;
 
         // find better feasible solution
-        for (int it = 0; it < 4000; it++) {
+        for (int it = 0; it < 3000; it++) {
             iterator();
         }
-//        iterator();
 
         // print and check violations
         double[] total = new double[m];
@@ -65,13 +67,11 @@ public class Heuristic extends Solver {
             scheduled[i] = new ArrayList<>();
         }
         for (int i = 0; i < n; i++) {
-            double time = d[i];
             double total = 0;
-            ArrayList<GV> candidates = new ArrayList<>();
+            ArrayList<Candidate> candidates = new ArrayList<>();
             for (int j : D[i]) {
-                double sub = t[j] - load[j];
-                if (sub < time) {
-                    candidates.add(new GV(j, 0));
+                if (t[j] - load[j] < d[i]) {
+                    candidates.add(new Candidate(j, 0));
                     continue;
                 }
                 int conflict = 0;
@@ -81,30 +81,30 @@ public class Heuristic extends Solver {
                         break;
                     }
                 }
-                double eval = (t[j] - load[j]) * Math.pow(10, X_best[i] == j ? res_best / (double) n : 0.8) * (1 - conflict);
+                double eval = (t[j] - load[j]) * Math.pow(20, X_best[i] == j ? 1.0 / alpha : 1.0) * (1 - conflict);
                 total += eval;
-                candidates.add(new GV(j, eval));
+                candidates.add(new Candidate(j, eval));
             }
-            double eval = Math.pow(1, X_best[i] == -1 ? res_best / (double) n : 0.6);
+            double eval = Math.pow(1, X_best[i] == -1 ? alpha : 1.0);
             total += eval;
-            candidates.add(new GV(-1, eval));
-            candidates.sort(GV.compareEval());
+            candidates.add(new Candidate(-1, eval));
+            candidates.sort(Candidate.compareEval());
             double prob = 0;
-            for (GV gv : candidates) {
-                prob += gv.eval;
-                gv.eval = prob / total;
+            for (Candidate candidate : candidates) {
+                prob += candidate.eval;
+                candidate.eval = prob / total;
             }
             double rand = random.nextDouble();
             int chosen = -1;
-            for (GV gv : candidates) {
-                if (rand < gv.eval) {
-                    chosen = gv.lop;
+            for (Candidate candidate : candidates) {
+                if (rand < candidate.eval) {
+                    chosen = candidate.index;
                     break;
                 }
             }
             X[i] = chosen;
             if (chosen > -1) {
-                load[chosen] += time;
+                load[chosen] += d[i];
                 scheduled[chosen].add(i);
             }
         }
@@ -114,22 +114,21 @@ public class Heuristic extends Solver {
             }
         }
         if (res > res_best) {
-            System.err.println("Update");
             res_best = res;
             System.arraycopy(X, 0, X_best, 0, n);
         }
     }
 
-    static class GV {
-        int lop;
+    static class Candidate {
+        int index;
         double eval;
 
-        GV(int _lop, double _eval) {
-            lop = _lop;
+        Candidate(int _index, double _eval) {
+            index = _index;
             eval = _eval;
         }
 
-        public static Comparator<GV> compareEval() {
+        public static Comparator<Candidate> compareEval() {
             return (o1, o2) -> Double.compare(o2.eval, o1.eval);
         }
     }

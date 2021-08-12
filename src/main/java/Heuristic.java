@@ -10,7 +10,7 @@ public class Heuristic extends Solver {
     int res_best;
 
     // param
-    double alpha = 0.25;
+    double alpha = 0.3;
 
     // random
     Random random = new Random();
@@ -85,7 +85,7 @@ public class Heuristic extends Solver {
                 total += eval;
                 candidates.add(new Candidate(j, eval));
             }
-            double eval = Math.pow(1, X_best[i] == -1 ? alpha : 1.0);
+            double eval = Math.pow(20, X_best[i] == -1 ? alpha : 1.0);
             total += eval;
             candidates.add(new Candidate(-1, eval));
             candidates.sort(Candidate.compareEval());
@@ -115,6 +115,7 @@ public class Heuristic extends Solver {
         }
         if (res > res_best) {
             res_best = res;
+            System.err.println("Update " + res_best);
             System.arraycopy(X, 0, X_best, 0, n);
         }
     }

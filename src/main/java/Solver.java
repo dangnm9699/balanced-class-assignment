@@ -25,7 +25,7 @@ public abstract class Solver {
         Solver solver;
         solver = new Heuristic();
         solver.start = System.currentTimeMillis();
-        solver.readData("50_500_10_(1).txt");
+        solver.readData("200.txt");
         solver.solve();
         System.out.printf("Runtime: %d (ms)\n", System.currentTimeMillis() - solver.start);
     }

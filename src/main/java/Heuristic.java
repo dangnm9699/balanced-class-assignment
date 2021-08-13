@@ -41,6 +41,7 @@ public class Heuristic extends Solver {
                     if (c[taken][i] == 1) System.err.println("Error Conflict");
                 total[X_best[i]] += d[i];
                 take[X_best[i]].add(i);
+//                System.out.println(X_best[i] + " " + take[X_best[i]]);
             }
             fileContent.append(i).append(" ").append(X_best[i]).append("\n");
         }

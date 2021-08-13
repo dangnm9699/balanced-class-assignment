@@ -17,7 +17,7 @@ public class LinearSolver extends Solver {
         start = System.currentTimeMillis();
         // define solver
         mpSolver = MPSolver.createSolver("SCIP");
-//        mpSolver.setTimeLimit(15 * 1000);
+        mpSolver.setTimeLimit(9200);
 
         // define variables
         X = new MPVariable[n][m];
@@ -45,11 +45,13 @@ public class LinearSolver extends Solver {
         }
         // constraint 3: Nếu 2 lớp học trùng TKB thì không thể do cùng một giảng viên giảng dạy
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n && j != i; j++) {
+            for (int j = 0; j < n; j++) {
                 for (int k = 0; k < m; k++) {
-                    MPConstraint constraint = mpSolver.makeConstraint(0, 1);
-                    constraint.setCoefficient(X[i][k], c[i][j]);
-                    constraint.setCoefficient(X[j][k], c[i][j]);
+                    if (c[i][j] == 1 && j != i) {
+                        MPConstraint constraint = mpSolver.makeConstraint(0, 1);
+                        constraint.setCoefficient(X[i][k], c[i][j]);
+                        constraint.setCoefficient(X[j][k], c[i][j]);
+                    }
                 }
             }
         }
@@ -78,7 +80,6 @@ public class LinearSolver extends Solver {
             System.err.println("Optimal solution not found");
         }
         printSolution();
-        System.out.printf("Runtime = %d (ms)\n", System.currentTimeMillis() - start);
     }
 
     void printSolution() {

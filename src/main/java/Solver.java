@@ -23,10 +23,10 @@ public abstract class Solver {
     public static void main(String[] args) {
         Loader.loadNativeLibraries();
         Solver solver;
-//        solver = new LinearSolver();
-        solver = new Heuristic();
+        solver = new LinearSolver();
+//        solver = new Heuristic();
         solver.start = System.currentTimeMillis();
-        solver.readData("5.txt");
+        solver.readData("20172998_5.txt");
         solver.solve();
         System.out.printf("Runtime: %d (ms)\n", System.currentTimeMillis() - solver.start);
     }

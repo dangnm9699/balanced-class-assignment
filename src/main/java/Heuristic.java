@@ -22,7 +22,7 @@ public class Heuristic extends Solver {
         res_best = 0;
 
         // find better feasible solution
-        for (int it = 0; it < 3000; it++) {
+        for (int it = 0; it < 10000; it++) {
             iterator();
         }
 
